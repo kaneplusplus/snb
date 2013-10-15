@@ -12,7 +12,7 @@ require(shiny)
 runSnbDistApp <- function(port = 8100L,
          launch.browser = getOption("shiny.launch.browser", interactive()),
          workerId = "") {
-  runApp( system.file("distApp", package='snb'), port=port, 
+  runApp( system.file("distApp", package='snm'), port=port, 
     launch.browser=launch.browser, workerId=workerId)
 }
 
