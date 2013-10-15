@@ -1,0 +1,30 @@
+\name{dsnb}
+\alias{dsnb}
+\alias{psnb}
+\alias{qsnb}
+\alias{rsnb}
+\alias{snb}
+\title{The Stopped Negative Binomial Distribution}
+\usage{
+  dsnb(x, prob, s, t)
+}
+\arguments{
+  \item{x,q}{vector of quantiles.}
+
+  \item{prob}{probility of success on each trial.}
+
+  \item{s}{the ceiling for the snb process}
+
+  \item{t}{the length of the the process can run for.}
+}
+\value{
+  'dsnb' give the density, 'psnb' give the distribution
+  function function, 'qsnb' gives the quantile function,
+  'rsnb' generates random deviates.
+}
+\description{
+  Density, distribution function, quantile function and
+  random generation for the stopped negative binomial
+  distribution with parameters, 'prob', 's', and 't'.
+}
+

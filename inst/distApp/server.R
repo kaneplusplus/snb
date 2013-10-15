@@ -1,0 +1,15 @@
+require(shiny)
+require(ggplot2)
+require(snb)
+
+shinyServer(function(input, output) {
+  output$plot <- renderPlot({
+    if (!is.na(input$sParam) && !is.na(input$tParam)) {
+      x <- input$sParam:input$tParam
+      p <- qplot(factor(x), dsnb(x, input$pParam, input$sParam, input$tParam),
+        stat="identity", geom="bar", ylab="f(t)", xlab="t")
+      print(p)
+    }
+  }, height=600)
+ 
+})
