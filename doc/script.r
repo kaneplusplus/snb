@@ -42,10 +42,14 @@ p2 <- ggplot(data=X2) + #right, up, data=X) + #, geom="segment") +
   geom_segment(x=0, y=s, xend=t-1, yend=s, color="red") +
   geom_segment(x=t, y=0, xend=t, yend=s-1, color="green")
 
-X3 <- X[1:(min(which(X$X >= s), which(k >= t+s))),]
-p3 <- qplot(k, head, data=X2, geom="line") +
+ggsave("ZeltermanPlot.pdf", p2, width=7, height=5)
+
+X3 <- X[1:(min(which(X$X >= s), which(X$tail >= t))),]
+p3 <- qplot(k, X, data=X3, geom="line") +
   scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
   scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-  geom_segment(x=0, y=s, xend=t, yend=s, color="red") 
+  geom_segment(x=0, y=s, xend=t+s, yend=s, color="red") 
 
-p3 <- stairs(p3, 10, 13)
+p3 <- stairs(p3, 10, 12)
+
+ggsave("KanePlot.pdf", p3, width=7, height=5)

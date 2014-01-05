@@ -1,12 +1,22 @@
 require(foreach)
 
-dsnb.private <- function(x, p, s, t) {
-  y <- choose(x-1, s-1) * p^s * (1-p)^(x-3)
-  w <- which(x == t)
-  y[w] <- y[w] + sum(dbinom(0:(s-1), t, p))
-  y[x > t | x < s] <- 0
-  y
+R <- function(k, p, t) {
+  choose(k-1, k-t) * p^(k-t) * (1-p)^t
+}
 
+N <- function(k, p, s) {
+  choose(k-1, s-1) * p^s * (1-p)^(k-s)
+}
+
+dsnb.private <- function(x, p, s, t) {
+  a <- foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
+  b <- foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
+  d <- a + b
+  d <- d/sum(d)
+  ret <- 0
+  if (x %in% 1:length(d))
+    ret <- d[x]
+  ret
 }
 
 #' The Stopped Negative Binomial Distribution
@@ -69,7 +79,7 @@ rsnb <- function(n, prob, s, t) {
 psnb <- function(q, prob, s, t) {
   if (length(prob) > 1)
     stop("psnb prob-parameter may only have length 1")
-  support <- min(s, t):t
+  support <- min(s, t):(t+s-1)
   cdf <- c(rep(0, support[1]-1), cumsum(dsnb(support, prob, s, t)))
   qs <- floor(q)
   qs[qs < support[1]] <- support[1]-1

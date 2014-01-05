@@ -64,12 +64,6 @@ Since $s > t$ by assumption $X(k')$ must also be less than $s$.
 \end{proof}
 
 \begin{prop}
-TODO: the ``peeking property''
-\end{prop}
-\begin{proof}
-\end{proof}
-
-\begin{prop}
 Let $\tau = \min\{ k: \{X_\mathcal{S}(k) = s\} \vee \{k \geq t\} \}$ be 
 the stopping time for $\mathbf{X_\mathcal{S}}$. The support of the 
 stopping time is
@@ -94,15 +88,15 @@ since $X_\mathcal{S}(k) < s$ as a consequence of Proposition \ref{prop:sandt}.
 \end{proof}
 
 \begin{prop}
-The density function for $\tau$ is
-\begin{align*}
-f\left(k, p, s, t\right) = \{s \leq k < t\} {k \choose s-1} p^s q^{k-1} + 
-  \{k=t\} T(k, p, s, t) 
-\end{align*}
-where
-\begin{equation} \label{eqn:tail}
-T(k, p, s, t) = 1 - \sum_{i=s}^{t-1} {k \choose s-1} p^s q^{k-1}.
-\end{equation}
+Let
+\begin{equation*}
+N(k, p, s) = {k-1 \choose s-1} p^s q^{k-s}
+\end{equation*}
+be the Negative Binomial distribution, then the density function for $\tau$ is
+\begin{equation*}
+f_\tau(k, p, s, t) =  \{s \leq k < t\} N(k, p, s) + 
+  \{k=t\} \left( 1 - \sum_{i=s}^{t-1} N(i, p, s) \right).
+\end{equation*}
 \end{prop}
 \begin{proof}
 TODO: Write the proof
@@ -156,7 +150,8 @@ an arrow in the vertical direction indicates ``heads.''
 \label{fig:zelterman_viz}
 \end{figure}
 
-Second, the process can be thought of similar to \ref{fig:bp}. At each
+Second, the process can be visualized in a manner similar to 
+Figure \ref{fig:bp}. At each
 step a coin is flipped. If it is heads, the process advances one diagonally
 in the positive horizontal and vertical direction. Otherwise, it advances
 in the positive horizontal direction only. The difference between the Stopped
@@ -173,6 +168,32 @@ denotes the number of ``heads.''
 }
 \label{fig:kane_viz}
 \end{figure}
+
+\begin{prop}
+The distribution of the stopping time of the Stopped Negative Binomial Process 
+is 
+\begin{equation*}
+f_N(k, p, s, t) = \alpha \{s \leq k \leq s+t\} N(k, p, s) + 
+  \beta \{t \leq k \leq s+t-1 \} R(k, p, t).
+\end{equation*}
+where 
+\begin{align*}
+&R(k, p, t) = {k-1 \choose k-t} p^{k-t} q^t, \\
+&\alpha = \frac{\sum_{i=s}^t N(i, p, s)}
+  {\sum_{i=s}^t N(i, p, s) + \sum_{i=t}^{s+t-1} R(i, p, t)}, \\
+&\beta = 1 - \alpha
+\end{align*}
+
+\end{prop}
+\begin{proof}
+\end{proof}
+
+\begin{prop}
+TODO: the ``peeking property''
+\end{prop}
+\begin{proof}
+\end{proof}
+
 
 
 \end{document}
