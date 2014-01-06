@@ -48,7 +48,7 @@ X3 <- X[1:(min(which(X$X >= s), which(X$tail >= t))),]
 p3 <- qplot(k, X, data=X3, geom="line") +
   scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
   scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-  geom_segment(x=0, y=s, xend=t+s, yend=s, color="red") 
+  geom_segment(x=0, y=s, xend=(t+s-1), yend=s, color="red") 
 
 p3 <- stairs(p3, 10, 12)
 

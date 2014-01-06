@@ -1,4 +1,6 @@
 require(foreach)
+require(ggplot2)
+require(grid)
 
 R <- function(k, p, t) {
   choose(k-1, k-t) * p^(k-t) * (1-p)^t
@@ -70,9 +72,81 @@ rsnb <- function(n, prob, s, t) {
   if (length(prob) > 1)
     stop("rsnb prob-parameter must have lenght 1")
   # Get the distribution function.
-  support <- min(s,t):t
+  support <- min(s,t):(t+1-1)
   ps <- dsnb( support, prob, s, t)
-  sample(support, n, replace=TRUE, prob=prob)
+  sample(support, n, replace=TRUE, prob=ps)
+}
+
+#' @export
+snbFlips <- function(n, prob, s, t, drop=TRUE) {
+  if (length(prob) > 1)
+    stop("rsnb prob-parameter must have lenght 1")
+  flips <- foreach(i=1:n) %do% {
+    flip <- rbinom(s+t-1, 1, prob=prob)
+    path <- c(0, cumsum(flip))
+    m <- which(path >= s)
+    if (length(m) == 0) {
+      m <- s+t-1
+    } else {
+      m <- min(m)
+    }
+    r <- which(path < 0:(s+t-1)-(t-s+1))
+    if (length(r) == 0) {
+      r <- s+t-1
+    } else {
+      r <- min(r)
+    }
+    flip[1:min(m, r)]
+  }
+  if (n == 1 && drop) {
+    flips <- unlist(flips)
+  }
+  flips
+}
+
+#' @export
+zplot <- function(flips, s, t) {
+  d <- data.frame(k=0:length(flips))
+  d$head <- c(0, cumsum(flips))
+  d$tail<- c(0, cumsum(!(flips)))
+  d$headEnd <- c(d$head[-1], NA)
+  d$tailEnd <- c(d$tail[-1], NA)
+
+  ggplot(data=na.omit(d)) +
+    scale_x_continuous(breaks=0:t, limits=c(0, t)) +
+    scale_y_continuous(breaks=0:s, limits=c(0, s)) +
+    geom_segment(mapping=aes(x=tail, y=head, xend=tailEnd,
+      yend=headEnd), arrow=arrow()) +
+    geom_segment(x=0, y=s, xend=t-1, yend=s, color="red") +
+    geom_segment(x=t, y=0, xend=t, yend=s-1, color="green")
+}
+
+stairs <- function(p, xstart, xend) {
+  x <- c(xstart, rep((xstart+1):xend, each=2))
+  y <- rep(0:(xend-xstart), each=2)
+  y <- y[-length(y)]
+  for (i in 1:(length(x)-1)) {
+    p <- p + geom_segment(x=x[i], y=y[i], xend=x[i+1], yend=y[i+1],
+      color="green")
+  }
+  p
+}
+
+#' @export
+kplot <- function(flips, s, t) {
+  d <- data.frame(k=0:length(flips))
+  d$head <- c(0, cumsum(flips))
+  d$tail<- c(0, cumsum(1-flips))
+  d$headEnd <- c(d$head[-1], NA)
+  d$tailEnd <- c(d$tail[-1], NA)
+  d$path <- c(0, cumsum(flips))
+  d$k <- 0:(nrow(d)-1)
+
+  p <- qplot(k, path, data=d, geom="line") +
+    scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
+    scale_y_continuous(breaks=0:s, limits=c(0, s)) +
+    geom_segment(x=0, y=s, xend=(t+s-1), yend=s, color="red")
+  stairs(p, t, s+t-1)
 }
 
 #' @export
