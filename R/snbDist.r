@@ -1,6 +1,7 @@
 require(foreach)
 require(ggplot2)
 require(grid)
+require(reshape2)
 
 R <- function(k, p, t) {
   choose(k-1, k-t) * p^(k-t) * (1-p)^t
@@ -38,6 +39,15 @@ dsnb.private.stacked <- function(x, p, s, t) {
   colnames(ret) <- c("x", "t", "r")
   rownames(ret) <- NULL
   ret
+}
+
+dsnbStackPlot <- function(x, p, s, t) {
+  d <- as.data.frame(
+    dsnb.private.stacked(3:12, p=0.3, s=3, t=10))
+  d <- melt(data=d, id.vars="x") 
+
+  qplot(x=factor(x), y=value, data=d, fill=variable, geom="bar", 
+    position="stack", stat="identity")
 }
 
 #' The Stopped Negative Binomial Distribution
