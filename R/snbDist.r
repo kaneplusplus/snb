@@ -83,7 +83,7 @@ snbFlips <- function(n, prob, s, t, drop=TRUE) {
     stop("rsnb prob-parameter must have lenght 1")
   flips <- foreach(i=1:n) %do% {
     flip <- rbinom(s+t-1, 1, prob=prob)
-    path <- c(0, cumsum(flip))
+    path <- c(cumsum(flip), sum(flip))
     m <- which(path >= s)
     if (length(m) == 0) {
       m <- s+t-1
