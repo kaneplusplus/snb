@@ -21,6 +21,25 @@ dsnb.private <- function(x, p, s, t) {
   ret
 }
 
+dsnb.private.stacked <- function(x, p, s, t) {
+  a <- foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
+  b <- foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
+  d <- a + b
+  u <- a/sum(d)
+  r <- b/sum(d)
+  ret <- foreach (i=x, .combine=rbind) %do% {
+    v <- c(i, 0, 0)
+    if (i %in% 1:length(d)) {
+      v[2] <- u[i] 
+      v[3] <- r[i] 
+    }
+    v
+  }
+  colnames(ret) <- c("x", "t", "r")
+  rownames(ret) <- NULL
+  ret
+}
+
 #' The Stopped Negative Binomial Distribution
 #'
 #' Density, distribution function, quantile function and random generation
