@@ -43,11 +43,11 @@ dsnb.private.stacked <- function(x, p, s, t) {
 
 dsnbStackPlot <- function(x, p, s, t) {
   d <- as.data.frame(
-    dsnb.private.stacked(3:12, p=0.3, s=3, t=10))
+    dsnb.private.stacked(x, p=p, s=s, t=t))
   d <- melt(data=d, id.vars="x") 
-
-  qplot(x=factor(x), y=value, data=d, fill=variable, geom="bar", 
-    position="stack", stat="identity")
+  names(d)[names(d) == "variable"] <- "border"
+  qplot(x=factor(x), y=value, data=d, fill=border, geom="bar", 
+    position="stack", stat="identity", ylab="f(k)", xlab="k")
 }
 
 #' The Stopped Negative Binomial Distribution
