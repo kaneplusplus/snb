@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+#bzip2 -cd 1988.csv.bz2 | head -n 100 | python ../chunk.py -r -o "out/1988_{}.csv" -c 10 | xargs wc -l
+
+import subprocess, sys, itertools, argparse
+
+def parse_args():
+  parser = argparse.ArgumentParser(description=
+    '"Chunk std into files."')
+  parser.add_argument('-o', type=str, default="",
+    help="The output file name. If {} is specified in the name it will be"+
+      "replaced with ascending numbers. Default is stdout")
+  parser.add_argument('-c', type=int, default=sys.maxint,
+    help="The chunk size per file. Default is Inf")
+  parser.add_argument('-n', type=int, default=0,
+    help="The number of chunk files to write. CURRENTLY NOT IMPLEMENTED")
+  parser.add_argument('-r', action="store_const", const=True, 
+    default=False, help="Repeat the header in each file?")
+  return parser.parse_args()
+
+def chunk_file_name_iter(file_name):
+  for chunk_num in itertools.count(1):
+    fn = file_name.format(chunk_num)
+    yield (fn, open(fn, "w"))
+
+if __name__ == '__main__':
+
+  args = parse_args()
+  chunk_size = args.c
+  keep_header = args.r
+
+  if keep_header:
+    header = sys.stdin.readline()
+  else:
+    header = ""
+
+  if args.o == "":
+    file_iter = itertools.repeat(("", sys.stdout))
+  else:
+    file_iter = chunk_file_name_iter(args.o)
+
+  fn,f = next(file_iter)
+  f.write(header)
+
+  counter = 0 if fn == "" else 1
+  for line in sys.stdin:
+    if counter == chunk_size:
+      sys.stdout.write(fn+"\n")
+      fn,f = next(file_iter)
+      counter=0
+      f.write(header)
+    f.write(line)
+    counter += 1
