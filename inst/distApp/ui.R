@@ -3,7 +3,7 @@ require(ggplot2)
 
 shinyUI(pageWithSidebar(
   
-  headerPanel("Stopped Negative Binomial Stopping Time Distribution"),
+  headerPanel("Stopped Negative Binomial Distribution"),
   
   sidebarPanel(
     sliderInput('pParam', 'p', min=0, max=1,
