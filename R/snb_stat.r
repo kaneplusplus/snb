@@ -38,9 +38,9 @@ fit_snb = function(x, s, t, prior=c(0.5, 0.5), num_sim=10000) {
   snb = fit_flips(x, s, t, prior)
   if (is.null(getDoParName())) registerDoSEQ()
   ps = rbeta(num_sim, snb['shape1'], snb['shape2'])
-  ret = sapply(ps, function(p) tail(snb_flips(1, p, s, t), 1))
-  list(s_prob = sum(ret), t_prob = sum(ret == 0), n=num_sim)
-  ret = c(sum(ret), sum(ret==0))
+  sims = foreach(p=ps, .combine=c) %dopar% tail(snb_flips(1, p, s, t), 1)
+  
+  ret = c(sum(sims), sum(sims==0))
   names(ret) = c("s", "t")
   class(ret) = "snb"
   ret
