@@ -2,20 +2,19 @@ Package: snm
 Type: Package
 Title: The Stopped Negative Binomial and Multinomial Distribution
 Version: 0.1
-Date: 2013-10-15
+Date: 2015-01-03
 Author: Michael J. Kane
 Maintainer: Michael Kane <kaneplusplus@gmail.com>
 Description: This package provides distribution functions and analyses for the
     Stopped Negative Binomial and Multinomial Distributions.
-License: ALv2
+License: Apache License 2.0
 Depends:
     shiny,
     foreach,
     ggplot2,
     reshape2,
-    grid
 Collate:
-    'distApp.r'
-    'snbDist.r'
-    'snbStat.r'
-    'simApp.r'
+    'dist_app.r'
+    'snb_dist.r'
+    'snb_stat.r'
+    'sim_app.r'

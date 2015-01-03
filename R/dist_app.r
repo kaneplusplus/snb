@@ -9,7 +9,7 @@ require(shiny)
 #' @param launch.browser If true, the system's default web browser will be launched automatically after the app is started. Defaults to true in interactive sessions only.
 #' @param workerId: Can generally be ignored. Exists to help some editions of Shiny Serv
 #' @export
-runSnbDistApp <- function(port = 8100L,
+snb_dist_app <- function(port = 8100L,
          launch.browser = getOption("shiny.launch.browser", interactive()),
          workerId = "") {
   runApp( system.file("distApp", package='snm'), port=port, 

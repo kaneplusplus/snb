@@ -1,5 +1,4 @@
 library(ggplot2)
-library(grid)
 
 stairs <- function(p, xstart, xend) {
   x <- c(xstart, rep((xstart+1):xend, each=2))
