@@ -133,21 +133,59 @@ snb_flips = function(n, prob, s, t, drop=TRUE) {
   flips
 }
 
-#' @export
-zplot = function(flips, s, t) {
+flips_to_zplot_df = function(flips) {
   d = data.frame(k=0:length(flips))
   d$head = c(0, cumsum(flips))
   d$tail= c(0, cumsum(!(flips)))
   d$headEnd = c(d$head[-1], NA)
   d$tailEnd = c(d$tail[-1], NA)
+  d
+}
 
-  ggplot(data=na.omit(d)) +
-    scale_x_continuous(breaks=0:t, limits=c(0, t)) +
-    scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-    geom_segment(mapping=aes(x=tail, y=head, xend=tailEnd,
-      yend=headEnd), arrow=arrow()) +
-    geom_segment(x=0, y=s, xend=t-1, yend=s, color="red") +
-    geom_segment(x=t, y=0, xend=t, yend=s-1, color="green")
+#' @export
+zplot = function(flips, s, t) {
+  if (!is.list(flips)) {
+    d=flips_to_zplot_df(flips)
+    p=ggplot(data=na.omit(d)) +
+      scale_x_continuous(breaks=0:t, limits=c(0, t)) +
+      scale_y_continuous(breaks=0:s, limits=c(0, s)) +
+      geom_segment(mapping=aes(x=tail, y=head, xend=tailEnd,
+        yend=headEnd), arrow=arrow()) +
+      geom_segment(x=0, y=s, xend=t-1, yend=s, color="red") +
+      geom_segment(x=t, y=0, xend=t, yend=s-1, color="green")
+  } else {
+    flip_set = lapply(flips, flips_to_zplot_df)
+    for (i in 1:length(flip_set)) {
+      flip_set[[i]] = na.omit(flip_set[[i]])
+      flip_set[[i]]$num = as.factor(i)
+      if (tail(flip_set[[i]]$headEnd, 1) == s) {
+        # We hit the top barrier. Jitter on the x values
+        flip_set[[i]]$tail= jitter(flip_set[[i]]$tail)
+        flip_set[[i]]$tail[flip_set[[i]]$tail < 0] = 0
+        flip_set[[i]]$tailEnd = jitter(flip_set[[i]]$tailEnd)
+        flip_set[[i]]$tailEnd[flip_set[[i]]$tailEnd < 0] = 0
+      } else {
+        flip_set[[i]]$head = jitter(flip_set[[i]]$head)
+        flip_set[[i]]$head[flip_set[[i]]$head < 0] = 0
+        flip_set[[i]]$headEnd = jitter(flip_set[[i]]$headEnd)
+        flip_set[[i]]$headEnd[flip_set[[i]]$headEnd < 0] = 0
+      }
+      # Make sure that the paths "connect".
+      for (j in nrow(flip_set[[i]]):2) {
+        flip_set[[i]][j, c("head", "tail")] = 
+          flip_set[[i]][j-1, c("headEnd", "tailEnd")]
+      }
+    }
+    d = Reduce(rbind, flip_set)
+    p=ggplot(data=na.omit(d)) +
+      scale_x_continuous(breaks=0:t, limits=c(0, t)) +
+      scale_y_continuous(breaks=0:s, limits=c(0, s)) +
+      geom_segment(mapping=aes(x=tail, y=head, xend=tailEnd,
+        yend=headEnd, group=num), arrow=arrow()) +
+      geom_segment(x=0, y=s, xend=t-1, yend=s, color="red") +
+      geom_segment(x=t, y=0, xend=t, yend=s-1, color="green")
+  }
+  p
 }
 
 stairs = function(p, xstart, xend) {
@@ -161,8 +199,7 @@ stairs = function(p, xstart, xend) {
   p
 }
 
-#' @export
-kplot = function(flips, s, t) {
+flips_to_kplot_df = function(flips) {
   d = data.frame(k=0:length(flips))
   d$head = c(0, cumsum(flips))
   d$tail= c(0, cumsum(1-flips))
@@ -170,12 +207,34 @@ kplot = function(flips, s, t) {
   d$tailEnd = c(d$tail[-1], NA)
   d$path = c(0, cumsum(flips))
   d$k = 0:(nrow(d)-1)
+  d
+}
 
-  p = qplot(k, path, data=d, geom="line") +
-    scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
-    scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-    geom_segment(x=0, y=s, xend=(t+s-1), yend=s, color="red")
-  stairs(p, t, s+t-1)
+#' @export
+kplot = function(flips, s, t, jitter_factor=1) {
+  if (!is.list(flips)) {
+    d = flips_to_kplot_df(flips)
+    p = qplot(k, path, data=d, geom="line") +
+      scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
+      scale_y_continuous(breaks=0:s, limits=c(0, s)) +
+      geom_segment(x=0, y=s, xend=(t+s-1), yend=s, color="red")
+    p = stairs(p, t, s+t-1)
+  } else {
+    flip_set = lapply(flips, flips_to_kplot_df)
+    for (i in 1:length(flip_set)) {
+      flip_set[[i]]$num = as.factor(i)
+      flip_set[[i]]$k = jitter(flip_set[[i]]$k, factor=jitter_factor)
+      flip_set[[i]]$k[flip_set[[i]]$k < 0] = 0
+    }
+    d = Reduce(rbind, flip_set)[,-(4:5)]
+    p = qplot(k, path, data=d, geom="path", group=num) +
+      scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
+      scale_y_continuous(breaks=0:s, limits=c(0, s)) +
+      geom_segment(x=0, y=s, xend=(t+s-1), yend=s, color="red") 
+    p = stairs(p, t, s+t-1)
+    p
+  }
+  p
 }
 
 #' @export
