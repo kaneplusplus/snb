@@ -31,8 +31,8 @@ dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
   ret = foreach (i=x, .combine=rbind) %do% {
     v = c(i, 0, 0)
     if (i %in% 1:length(d)) {
-      v[2] = u[i] 
-      v[3] = r[i] 
+      v[2] = a[i] #u[i] 
+      v[3] = b[i] #r[i] 
     }
     v
   }
