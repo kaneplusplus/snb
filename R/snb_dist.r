@@ -59,7 +59,7 @@ dsnb_stack_plot = function(p, s, t, x) {
   d = melt(data=d, id.vars="x") 
   names(d)[names(d) == "variable"] = "barrier"
   qplot(x=factor(x), y=value, data=d, fill=barrier, geom="bar", 
-    position="stack", stat="identity", ylab="f(k)", xlab="k")
+    position="stack", stat="identity", ylab="f(k, p, s, t)", xlab="k")
 }
 
 #' The Stopped Negative Binomial Distribution
