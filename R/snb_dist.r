@@ -41,11 +41,21 @@ dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
   ret
 }
 
+#' The Stopped Negative Binomial p.m.f. Stack-Plot
+#'
+#' The stacked plot of the probability mass function for the snb showing
+#' the contributions from N (the top barrier) and R (the right barrier).
+#' @param x the range of the distribution (defaults to min(s,t):(t+s-1)).
+#' @param p the probability of a success on each trial.
+#' @param s the top barrier for the snb process.
+#' @param t the right barrier for the snb process.
+#' @return a plot of the probability mass function.
+#' @export
 dsnb_stack_plot = function(x, p, s, t) {
   d = as.data.frame(
     dsnb.private.stacked(x, p=p, s=s, t=t))
   d = melt(data=d, id.vars="x") 
-  names(d)[names(d) == "variable"] = "border"
+  names(d)[names(d) == "variable"] = "barrier"
   qplot(x=factor(x), y=value, data=d, fill=border, geom="bar", 
     position="stack", stat="identity", ylab="f(k)", xlab="k")
 }

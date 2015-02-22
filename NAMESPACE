@@ -3,6 +3,7 @@
 S3method(summary,flips)
 S3method(summary,snb)
 export(dsnb)
+export(dsnb_stack_plot)
 export(fit_flips)
 export(fit_snb)
 export(kplot)
