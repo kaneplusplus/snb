@@ -36,7 +36,7 @@ dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
     }
     v
   }
-  colnames(ret) = c("x", "t", "r")
+  colnames(ret) = c("x", "s", "t")
   rownames(ret) = NULL
   ret
 }
