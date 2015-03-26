@@ -10,6 +10,20 @@ N = function(k, p, s) {
   choose(k-1, s-1) * p^s * (1-p)^(k-s)
 }
 
+Rc = function(k, s, t, shape1, shape2) {
+  suppressWarnings({ret = choose(k-1, k-t) * beta(shape1 + k - t, t + shape2) / 
+    beta(shape1, shape2)})
+  ret[!is.finite(ret)] = 0
+  ret
+}
+
+Nc = function(k, s, t, shape1, shape2) {
+  suppressWarnings({ret = choose(k-1, s-1) * beta(shape1 + s, k - s + shape2) / 
+    beta(shape1, shape2)})
+  ret[!is.finite(ret)] = 0
+  ret
+}
+
 dsnb_private = function(x, p, s, t, tol=1e-7) {
   a = foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
   b = foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
@@ -21,9 +35,37 @@ dsnb_private = function(x, p, s, t, tol=1e-7) {
   ret
 }
 
+# Remember, shape1 and shape2 are data plus priors.
+dsnbc_private = function(x, s, t, shape1, shape2, tol=1e-7) {
+  a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
+  b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
+  d = a + b
+  if (abs(sum(a+b) - 1) > tol) stop("Density error")
+  inds = which(x %in% 1:length(d))
+  ret = rep(0, length(x))
+  ret[inds] = d[x[inds]]
+  ret
+}
+
 dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
   a = foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
   b = foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
+  ret = foreach (i=x, .combine=rbind) %do% {
+    v = c(i, 0, 0)
+    if (i %in% 1:length(d)) {
+      v[2] = a[i]
+      v[3] = b[i]
+    }
+    v
+  }
+  colnames(ret) = c("x", "N", "R")
+  rownames(ret) = NULL
+  ret
+}
+
+dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
+  a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
+  b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
   d = a + b
   if (abs(sum(a+b) - 1) > tol) stop("Density error")
   u = a/sum(d)
@@ -36,7 +78,7 @@ dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
     }
     v
   }
-  colnames(ret) = c("x", "s", "t")
+  colnames(ret) = c("x", "N", "R")
   rownames(ret) = NULL
   ret
 }
@@ -57,10 +99,52 @@ dsnb_stack_plot = function(p, s, t, x) {
   d = as.data.frame(
     dsnb_private_stacked(x, p=p, s=s, t=t))
   d = melt(data=d, id.vars="x") 
-  names(d)[names(d) == "variable"] = "barrier"
-  qplot(x=factor(x), y=value, data=d, fill=barrier, geom="bar", 
-    position="stack", stat="identity", ylab="f(k, p, s, t)", xlab="k")
+  names(d)[names(d) == "variable"] = "Function"
+  qplot(x=factor(x), y=value, data=d, fill=Function, geom="bar", 
+    position="stack", stat="identity", ylab="f(k,p,s,t)", xlab="k")
 }
+
+#' The Compound Stopped Negative Binomial p.m.f. Stack-Plot
+#'
+#' The stacked plot of the probability mass function for the snb showing
+#' the contributions from N (the top barrier) and R (the right barrier).
+#' @param d the data, a vector of 0 and 1 values.
+#' @param s the top barrier for the snb process.
+#' @param t the right barrier for the snb process.
+#' @param shape1 the value of the first shape parameter on the prior
+#' @param shape2 the value of the second shape parameter on the prior
+#' @param x the range of the distribution (defaults to min(s,t):(t+s-1)).
+#' @return a plot of the probability mass function.
+#' @export
+dsnbc_stack_plot = function(d, s, t, shape1=0.5, shape2=0.5,
+                            x=min(s,t):(t+s-1)) {
+  d = dsnbc_stack(d, s, t, shape1, shape2, x)
+  d = melt(data=d, id.vars="x") 
+  names(d)[names(d) == "variable"] = "Function"
+  qplot(x=factor(x), y=value, data=d, fill=Function, geom="bar", 
+    position="stack", stat="identity", ylab="f(k|x,s,t,alpha,beta)", xlab="k")
+}
+
+#' The "Stacked" Compound Negative Binomial Density Function
+#' 
+#' This function returns the "stacked" density function showing the 
+#' contribution from each of the end points to the total mass.
+#' @param d the data, a vector of 0 and 1 values.
+#' @param s the top barrier for the snb process.
+#' @param t the right barrier for the snb process.
+#' @param shape1 the value of the first shape parameter on the prior
+#' @param shape2 the value of the second shape parameter on the prior
+#' @param x the range of the distribution (defaults to min(s,t):(t+s-1)).
+#' @return the "stacked" density.
+#' @export
+dsnbc_stack = function(d, s, t, shape1=0.5, shape2=0.5,
+                            x=min(s,t):(t+s-1)) {
+  num_heads = sum(d)
+  num_flips = length(d)
+  as.data.frame(
+    dsnbc_private_stacked(x, shape1+num_heads, shape2+num_flips-num_heads,s,t))
+}
+
 
 #' The Stopped Negative Binomial Distribution
 #'
@@ -243,7 +327,7 @@ kplot = function(flips, s, t) {
     p = qplot(k, path, data=d, geom="line") +
       scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
       scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-      geom_segment(x=0, y=s, xend=(t+s-1), yend=s, color="red")
+      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, color="red")
     p = stairs(p, t, s+t-1)
   } else {
     flip_set = lapply(flips, flips_to_kplot_df)
@@ -256,7 +340,7 @@ kplot = function(flips, s, t) {
     p = qplot(k, path, data=d, geom="path", group=num) +
       scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
       scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-      geom_segment(x=0, y=s, xend=(t+s-1), yend=s, color="red") 
+      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, color="red") 
     p = stairs(p, t, s+t-1)
     p
   }
