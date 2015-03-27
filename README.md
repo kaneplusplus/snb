@@ -1,4 +1,4 @@
-snm
+snb
 ===
 
-The Stopped Negative Binomial and Multinomial Distribution
+The Stopped Negative Binomial Distribution
