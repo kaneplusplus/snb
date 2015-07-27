@@ -58,7 +58,7 @@ dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
     }
     v
   }
-  colnames(ret) = c("x", "N", "R")
+  colnames(ret) = c("x", "s", "t")
   rownames(ret) = NULL
   ret
 }
@@ -78,7 +78,7 @@ dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
     }
     v
   }
-  colnames(ret) = c("x", "N", "R")
+  colnames(ret) = c("x", "s", "t")
   rownames(ret) = NULL
   ret
 }
