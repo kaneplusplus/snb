@@ -52,7 +52,7 @@ dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
   b = foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
   ret = foreach (i=x, .combine=rbind) %do% {
     v = c(i, 0, 0)
-    if (i %in% 1:length(d)) {
+    if (i %in% 1:max(x)) {
       v[2] = a[i]
       v[3] = b[i]
     }
