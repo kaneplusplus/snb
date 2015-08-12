@@ -47,7 +47,9 @@ dsnbc_private = function(x, s, t, shape1, shape2, tol=1e-7) {
   ret
 }
 
-dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
+
+#' @export
+dsnb_stacked = function(x, p, s, t, tol=1e-7) {
   a = foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
   b = foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
   ret = foreach (i=x, .combine=rbind) %do% {
@@ -60,7 +62,28 @@ dsnb_private_stacked = function(x, p, s, t, tol=1e-7) {
   }
   colnames(ret) = c("x", "s", "t")
   rownames(ret) = NULL
+  ret[is.na(ret[,2]), 2] = 0
+  ret[is.na(ret[,3]), 3] = 0
   ret
+}
+
+dsnb_private_stacked = dsnb_stacked
+
+# 
+sweep_support = function(p, s, t, prior=c(0.5, 0.5)) {
+  s_support = s:(s+t-1)
+  t_support = t:(s+t-1)
+ 
+  traj_base = rep(1, s) 
+  trajs = foreach (i=0:(t-1)) %do% {
+    c(rep(0, i), traj_base)
+  }
+
+  traj_base = rep(0, t)
+  append(trajs,
+    foreach (i=0:(s-1)) %do% {
+      c(rep(1, i), traj_base)
+    })
 }
 
 dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
@@ -82,6 +105,7 @@ dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
   rownames(ret) = NULL
   ret
 }
+
 
 #' The Stopped Negative Binomial p.m.f. Stack-Plot
 #'
