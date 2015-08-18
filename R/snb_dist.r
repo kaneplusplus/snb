@@ -69,23 +69,6 @@ dsnb_stacked = function(x, p, s, t, tol=1e-7) {
 
 dsnb_private_stacked = dsnb_stacked
 
-# 
-sweep_support = function(p, s, t, prior=c(0.5, 0.5)) {
-  s_support = s:(s+t-1)
-  t_support = t:(s+t-1)
- 
-  traj_base = rep(1, s) 
-  trajs = foreach (i=0:(t-1)) %do% {
-    c(rep(0, i), traj_base)
-  }
-
-  traj_base = rep(0, t)
-  append(trajs,
-    foreach (i=0:(s-1)) %do% {
-      c(rep(1, i), traj_base)
-    })
-}
-
 dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
   a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
   b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
@@ -114,17 +97,53 @@ dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
 #' @param p the probability of a success on each trial.
 #' @param s the top barrier for the snb process.
 #' @param t the right barrier for the snb process.
-#' @return a plot of the probability mass function.
 #' @param x the range of the distribution (defaults to min(s,t):(t+s-1)).
+#' @param offset an offset on the domain of the distribution. This is 
+#' used when getting the conditional distribution where the domain does 
+#' not start at 1.
+#' @return a plot of the probability mass function.
 #' @export
-dsnb_stack_plot = function(p, s, t, x) {
+dsnb_stack_plot = function(p, s, t, x, offset) {
   if (missing(x))
     x = min(s,t):(t+s-1)
   d = as.data.frame(
     dsnb_private_stacked(x, p=p, s=s, t=t))
+  if (!missing(offset))
+    d$x = d$x+offset
   d = melt(data=d, id.vars="x") 
   names(d)[names(d) == "variable"] = "Function"
   qplot(x=factor(x), y=value, data=d, fill=Function, geom="bar", 
+    position="stack", stat="identity", ylab="f(k,p,s,t)", xlab="k")
+}
+
+#' The Conditional Stopped Negative Binomial Density
+#' @export
+cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
+  fit = fit_flips(d, s, t, prior)
+  phat = (fit['shape1'] - 1) / (fit['shape1'] + fit['shape2'] - 2)
+  total_range = s+t-1
+  cond_range = (length(d):total_range)
+  cond_s = s - sum(d)
+  cond_t = t - sum(1-d)
+  # Use the mode unless we don't have enough data.
+  p_hat = if(fit[1] < 1 || fit[2] < 1) {
+            fit[1] / (fit[1] + fit[2])
+          } else {
+            (fit[1] - 1) / (fit[1] + fit[2] - 2)
+          }
+  ret = as.data.frame(dsnb_stacked(min(cond_s,cond_t):(cond_s+cond_t-1), 
+                      p_hat, cond_s, cond_t))
+  ret$x = ret$x + length(d)
+  ret
+}
+
+#' The Conditional Stopped Negative Binomial Density Plot
+#' @export
+conditional_dsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
+  x = cdsnb(d, s, t, prior)
+  x = melt(data=x, id.vars="x") 
+  names(x)[names(x) == "variable"] = "Function"
+  qplot(x=factor(x), y=value, data=x, fill=Function, geom="bar", 
     position="stack", stat="identity", ylab="f(k,p,s,t)", xlab="k")
 }
 
