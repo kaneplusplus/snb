@@ -2,6 +2,8 @@
 
 S3method(summary,flips)
 S3method(summary,snb)
+export(cdsnb)
+export(cdsnb_stack_plot)
 export(dsnb)
 export(dsnb_stack_plot)
 export(dsnb_stacked)

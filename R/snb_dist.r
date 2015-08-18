@@ -117,6 +117,15 @@ dsnb_stack_plot = function(p, s, t, x, offset) {
 }
 
 #' The Conditional Stopped Negative Binomial Density
+#'
+#' The conditional stacked snb density function. This function gets
+#' the distribution of the stopping time when the binomial process has not 
+#' reached one of its endpoints. The success probability is fitted using 
+#' fit_flips with specified prior.
+#' @param d a sequence of 1's and 0's corresponding to the binomial process.
+#' @param s the top barrier for the snb process.
+#' @param t the right barrier for the snb process.
+#' @param prior the shape parameters of the prior on the success probability.
 #' @export
 cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
   fit = fit_flips(d, s, t, prior)
@@ -138,8 +147,17 @@ cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
 }
 
 #' The Conditional Stopped Negative Binomial Density Plot
+#' 
+#' A plot of the stacked snb density function. The plot shows the distribution
+#' of teh stopping time when the binomial process has not reached one of 
+#' its endpoints. The success probabilty is fitted using the fit_flips function
+#' with specefied prior.
+#' @param d a sequence of 1's and 0's corresponding to the binomial process.
+#' @param s the top barrier for the snb process.
+#' @param t the right barrier for the snb process.
+#' @param prior the shape parameters of the prior on the success probability.
 #' @export
-conditional_dsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
+cdsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
   x = cdsnb(d, s, t, prior)
   x = melt(data=x, id.vars="x") 
   names(x)[names(x) == "variable"] = "Function"
@@ -147,7 +165,7 @@ conditional_dsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
     position="stack", stat="identity", ylab="f(k,p,s,t)", xlab="k")
 }
 
-#' The Compound Stopped Negative Binomial p.m.f. Stack-Plot
+#' Stacked Plot of the Compound Stopped Negative Binomial Density 
 #'
 #' The stacked plot of the probability mass function for the snb showing
 #' the contributions from N (the top barrier) and R (the right barrier).
