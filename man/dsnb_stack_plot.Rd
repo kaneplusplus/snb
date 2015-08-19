@@ -7,7 +7,7 @@
 dsnb_stack_plot(p, s, t, x, offset)
 }
 \arguments{
-\item{p}{the probability of a success on each trial.}
+\item{p}{the probability of a success on each coin flip.}
 
 \item{s}{the top barrier for the snb process.}
 

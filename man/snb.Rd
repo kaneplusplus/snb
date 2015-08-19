@@ -13,7 +13,7 @@ dsnb(x, prob, s, t)
 \arguments{
 \item{x,q}{vector of quantiles.}
 
-\item{prob}{probility of success on each trial.}
+\item{prob}{probility of success on each coin flip.}
 
 \item{s}{the ceiling for the snb process}
 

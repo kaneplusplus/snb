@@ -8,6 +8,10 @@
 #' @param s The ceiling for the snb process.
 #' @param t The right barrier for the snb process.
 #' @param prior The two element vector giving the parameters for the beta prior.
+#' @examples
+#' # Fit a hypthetical trial.
+#' trial = c(0, 0, 0, 0, 1, 0, 0)
+#' summary(fit_flips(trial, s=2, t=6))
 #' @export
 fit_flips <- function(x, s, t, prior=c(0.5, 0.5)) {
   alpha = sum(x) + prior[1]
@@ -33,28 +37,28 @@ summary.flips = function(object, ...) {
   invisible(s)
 }
 
-#' @export
-fit_snb = function(x, s, t, prior=c(0.5, 0.5), num_sim=10000) {
-  snb = fit_flips(x, s, t, prior)
-  if (is.null(getDoParName())) registerDoSEQ()
-  ps = rbeta(num_sim, snb['shape1'], snb['shape2'])
-  sims = foreach(p=ps, .combine=c) %dopar% tail(snb_flips(1, p, s, t), 1)
-  
-  ret = c(sum(sims), sum(sims==0))
-  names(ret) = c("s", "t")
-  class(ret) = "snb"
-  ret
-}
+##' @export
+#fit_snb = function(x, s, t, prior=c(0.5, 0.5), num_sim=10000) {
+#  snb = fit_flips(x, s, t, prior)
+#  if (is.null(getDoParName())) registerDoSEQ()
+#  ps = rbeta(num_sim, snb['shape1'], snb['shape2'])
+#  sims = foreach(p=ps, .combine=c) %dopar% tail(snb_flips(1, p, s, t), 1)
+#  
+#  ret = c(sum(sims), sum(sims==0))
+#  names(ret) = c("s", "t")
+#  class(ret) = "snb"
+#  ret
+#}
 
-#' @export
-summary.snb = function(object, ...) {
-  header = c("Prob s", "Prob t", "n")
-  cat(paste(sprintf("%8s", header)), "\n")
-  s = object['s']
-  t = object['t']
-  ret = c(s/(s+t), t / (s+t), s+t)
-  cat(paste(sprintf("%8s", ret)), "\n")
-  invisible(ret)
-}
+##' @export
+#summary.snb = function(object, ...) {
+#  header = c("Prob s", "Prob t", "n")
+#  cat(paste(sprintf("%8s", header)), "\n")
+#  s = object['s']
+#  t = object['t']
+#  ret = c(s/(s+t), t / (s+t), s+t)
+#  cat(paste(sprintf("%8s", ret)), "\n")
+#  invisible(ret)
+#}
 
 

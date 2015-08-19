@@ -20,4 +20,9 @@ Fit a vector of zero's and ones according to the stopped negative
 binomial distribution with specified 's' and 't' parameters and
 a beta prior.
 }
+\examples{
+# Fit a hypthetical trial.
+trial = c(0, 0, 0, 0, 1, 0, 0)
+summary(fit_flips(trial, s=2, t=6))
+}
 

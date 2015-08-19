@@ -94,7 +94,7 @@ dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
 #'
 #' The stacked plot of the probability mass function for the snb showing
 #' the contributions from N (the top barrier) and R (the right barrier).
-#' @param p the probability of a success on each trial.
+#' @param p the probability of a success on each coin flip. 
 #' @param s the top barrier for the snb process.
 #' @param t the right barrier for the snb process.
 #' @param x the range of the distribution (defaults to min(s,t):(t+s-1)).
@@ -216,7 +216,7 @@ dsnbc_stack = function(d, s, t, shape1=0.5, shape2=0.5,
 #' @rdname snb
 #' @aliases psnb snb qsnb rsnb
 #' @param x,q vector of quantiles.
-#' @param prob probility of success on each trial. 
+#' @param prob probility of success on each coin flip.
 #' @param s the ceiling for the snb process
 #' @param t the length of the the process can run for.
 #' @return 'dsnb' give the density, 'psnb' give the distribution function
@@ -299,6 +299,24 @@ flips_to_zplot_df = function(flips) {
   d
 }
 
+#' The Z-Plot for the Binomial Process
+#'
+#' Visualize the stopped Bernoulli process with horizontal axis counting 
+#' successes and vertical axis counting failure.
+#'
+#' @param flips the sequence of coing flips (1's and 0's) to visualize.
+#' Note that this can be a list in which case multiple processes will be 
+#' shown.
+#' @param s the top barrier for the Bernoulli process.
+#' @param t the right barrier for the Bernoulli process.
+#' @param show_arrows should arrows be shown in the Bernoullis process path?
+#' @param unif_jitter for multiple flip paths, how much jitter to add 
+#' (default is 0.2).
+#' @param xlab the name of the x axis.
+#' @param ylab the name of the y axis.
+#' @examples
+#' flips = c(0, 0, 1)
+#' zplot(flips, 2, 3)
 #' @export
 zplot = function(flips, s, t, show_arrows=TRUE, unif_jitter=0.2, xlab=NULL,
                  ylab=NULL) {
@@ -381,6 +399,17 @@ flips_to_kplot_df = function(flips) {
   d
 }
 
+#' The K-Plot for the Binomial Process
+#'
+#' Visualize the stopped Bernoulli process with a horizontal step axis and a 
+#' vertical axis counting the number of successes.
+#'
+#' @param flips the sequence of coin flips (1's and 0's) to visualize.
+#' @param s the top barrier for the Bernoulli process.
+#' @param t the right barrier for the Bernoulli process.
+#' @examples
+#' flips = c(0, 0, 1)
+#' kplot(flips, 2, 3)
 #' @export
 kplot = function(flips, s, t) {
   if (!is.list(flips)) {
