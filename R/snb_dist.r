@@ -214,8 +214,14 @@ dsnbc_stack = function(d, s, t, shape1=0.5, shape2=0.5,
 #' 's', and 't'.
 #' 
 #' @rdname snb
-#' @aliases psnb snb qsnb rsnb
-#' @param x,q vector of quantiles.
+#' @aliases psnb dsnb qsnb rsnb
+#' @usage dsnb(x, prob, s, t)
+#' psnb(q, prob, s, t)
+#' qsnb(p, prob, s, t)
+#' rsnb(n, prob, s, t)
+#' @param x, q vector of quantiles.
+#' @param p vector of probabilities.
+#' @param n number of observations.
 #' @param prob probility of success on each coin flip.
 #' @param s the ceiling for the snb process
 #' @param t the length of the the process can run for.

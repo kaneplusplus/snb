@@ -9,6 +9,7 @@
 \title{The Stopped Negative Binomial Distribution}
 \usage{
 dsnb(x, prob, s, t)
+psnb(q, prob, s, t)
 }
 \arguments{
 \item{x,q}{vector of quantiles.}
