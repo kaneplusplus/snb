@@ -111,8 +111,8 @@ dsnb_stack_plot = function(p, s, t, x, offset) {
   if (!missing(offset))
     d$x = d$x+offset
   d = melt(data=d, id.vars="x") 
-  names(d)[names(d) == "variable"] = "Function"
-  qplot(x=factor(x), y=value, data=d, fill=Function, geom="bar", 
+  names(d)[names(d) == "variable"] = "Outcome"
+  qplot(x=factor(x), y=value, data=d, fill=Outcome, geom="bar", 
     position="stack", stat="identity", ylab="f(k,p,s,t)", xlab="k")
 }
 
@@ -160,8 +160,8 @@ cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
 cdsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
   x = cdsnb(d, s, t, prior)
   x = melt(data=x, id.vars="x") 
-  names(x)[names(x) == "variable"] = "Function"
-  qplot(x=factor(x), y=value, data=x, fill=Function, geom="bar", 
+  names(x)[names(x) == "variable"] = "Outcome"
+  qplot(x=factor(x), y=value, data=x, fill=Outcome, geom="bar", 
     position="stack", stat="identity", ylab="f(k,p,s,t)", xlab="k")
 }
 
@@ -181,8 +181,8 @@ dsnbc_stack_plot = function(d, s, t, shape1=0.5, shape2=0.5,
                             x=min(s,t):(t+s-1)) {
   d = dsnbc_stack(d, s, t, shape1, shape2, x)
   d = melt(data=d, id.vars="x") 
-  names(d)[names(d) == "variable"] = "Function"
-  qplot(x=factor(x), y=value, data=d, fill=Function, geom="bar", 
+  names(d)[names(d) == "variable"] = "Outcome"
+  qplot(x=factor(x), y=value, data=d, fill=Outcome, geom="bar", 
     position="stack", stat="identity", ylab="f(k|x,s,t,alpha,beta)", xlab="k")
 }
 
