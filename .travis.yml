@@ -9,13 +9,6 @@ os:
 r_build_args: --no-build-vignettes --no-manual --no-resave-data
 r_check_args: --no-build-vignettes --no-manual
 
-r_binary_packages:
-  - shiny,
-  - foreach,
-  - ggplot2,
-  - reshape2,
-  - grid
-
 r_github_packages:
   - jimhester/covr
 
