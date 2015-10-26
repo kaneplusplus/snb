@@ -24,11 +24,11 @@ Nc = function(k, s, t, shape1, shape2) {
   ret
 }
 
-dsnb_private = function(x, p, s, t, tol=1e-7) {
+dsnb_private = function(x, p, s, t) {
+  k=NULL
   a = foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
   b = foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
   d = a + b
-  if (abs(sum(a+b) - 1) > tol) stop("Density error")
   inds = which(x %in% 1:length(d))
   ret = rep(0, length(x))
   ret[inds] = d[x[inds]]
@@ -36,20 +36,27 @@ dsnb_private = function(x, p, s, t, tol=1e-7) {
 }
 
 # Remember, shape1 and shape2 are data plus priors.
-dsnbc_private = function(x, s, t, shape1, shape2, tol=1e-7) {
+dsnbc_private = function(x, s, t, shape1, shape2) {
+  k = NULL
   a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
   b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
   d = a + b
-  if (abs(sum(a+b) - 1) > tol) stop("Density error")
   inds = which(x %in% 1:length(d))
   ret = rep(0, length(x))
   ret[inds] = d[x[inds]]
   ret
 }
 
-
+#' Stack the distribution by responders and non-responders.
+#'
+#' Stacked distribution function for the stopped negative binomial distribution.
+#' @param x vector of quantiles
+#' @param p vector of probabilities
+#' @param s the number of heads to stop at.
+#' @param t the number of tails to stop at.
 #' @export
-dsnb_stacked = function(x, p, s, t, tol=1e-7) {
+dsnb_stacked = function(x, p, s, t) {
+  k = i = NULL
   a = foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
   b = foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
   ret = foreach (i=x, .combine=rbind) %do% {
@@ -69,11 +76,11 @@ dsnb_stacked = function(x, p, s, t, tol=1e-7) {
 
 dsnb_private_stacked = dsnb_stacked
 
-dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
+dsnbc_private_stacked = function(x, shape1, shape2, s, t) {
+  k=i=NULL
   a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
   b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
   d = a + b
-  if (abs(sum(a+b) - 1) > tol) stop("Density error")
   u = a/sum(d)
   r = b/sum(d)
   ret = foreach (i=x, .combine=rbind) %do% {
@@ -104,6 +111,7 @@ dsnbc_private_stacked = function(x, shape1, shape2, s, t, tol=1e-7) {
 #' @return a plot of the probability mass function.
 #' @export
 dsnb_stack_plot = function(p, s, t, x, offset) {
+  value = Outcome = k = NULL
   if (missing(x))
     x = min(s,t):(t+s-1)
   d = as.data.frame(
@@ -156,8 +164,11 @@ cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
 #' @param s the top barrier for the snb process.
 #' @param t the right barrier for the snb process.
 #' @param prior the shape parameters of the prior on the success probability.
+#' @importFrom reshape2 melt
+#' @importFrom ggplot2 qplot
 #' @export
 cdsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
+  value = Outcome = NULL
   x = cdsnb(d, s, t, prior)
   x = melt(data=x, id.vars="x") 
   names(x)[names(x) == "variable"] = "Outcome"
@@ -179,6 +190,7 @@ cdsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
 #' @export
 dsnbc_stack_plot = function(d, s, t, shape1=0.5, shape2=0.5,
                             x=min(s,t):(t+s-1)) {
+  value = Outcome = NULL
   d = dsnbc_stack(d, s, t, shape1, shape2, x)
   d = melt(data=d, id.vars="x") 
   names(d)[names(d) == "variable"] = "Outcome"
@@ -219,7 +231,8 @@ dsnbc_stack = function(d, s, t, shape1=0.5, shape2=0.5,
 #' psnb(q, prob, s, t)
 #' qsnb(p, prob, s, t)
 #' rsnb(n, prob, s, t)
-#' @param x, q vector of quantiles.
+#' @param x vector of quantiles.
+#' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of observations.
 #' @param prob probility of success on each coin flip.
@@ -228,6 +241,7 @@ dsnbc_stack = function(d, s, t, shape1=0.5, shape2=0.5,
 #' @return 'dsnb' give the density, 'psnb' give the distribution function
 #' function, 'qsnb' gives the quantile function, 'rsnb' generates random
 #' deviates.
+#' @importFrom foreach foreach %do%
 #' @export
 dsnb = function(x, prob, s, t) {
   if (length(s) != 1)
@@ -242,6 +256,7 @@ dsnb = function(x, prob, s, t) {
     stop("dsnb prob-parameter must be between zero and one inclusive")
   ret = c()
   if (length(x) > 1 && length(prob) > 1) {
+    pp=xx=NULL
     ret = foreach(xx=x, pp=prob, .combine=c) %do% {
       dsnb_private(xx, pp, s, t)
     }
@@ -269,10 +284,18 @@ rsnb = function(n, prob, s, t) {
   sample(support, n, replace=TRUE, prob=ps)
 }
 
+#' Simulate the binomial process
+#'
+#' Generate coin flip trajectories that stop after either s heads or t tails.
+#' @param n the number of trajectories to simulate.
+#' @param prob the probability of a head.
+#' @param s the number of heads to stop at.
+#' @param t the number of tails to stop at.
+#' @param drop if TRUE then return the results as a matrix. Otherwise return as a list.
 #' @export
 snb_flips = function(n, prob, s, t, drop=TRUE) {
   if (length(prob) > 1)
-    stop("rsnb prob-parameter must have lenght 1")
+    stop("rsnb prob-parameter must have length 1")
   flips = foreach(i=1:n) %do% {
     flip = rbinom(s+t-1, 1, prob=prob)
     path = c(cumsum(flip), sum(flip))
@@ -320,13 +343,15 @@ flips_to_zplot_df = function(flips) {
 #' (default is 0.2).
 #' @param xlab the name of the x axis.
 #' @param ylab the name of the y axis.
+#' @importFrom ggplot2 ggplot geom_segment scale_y_continuous aes
+#' @importFrom grid arrow
 #' @examples
 #' flips = c(0, 0, 1)
 #' zplot(flips, 2, 3)
 #' @export
 zplot = function(flips, s, t, show_arrows=TRUE, unif_jitter=0.2, xlab=NULL,
                  ylab=NULL) {
-  p = NULL
+  p = tailEnd = headEnd = num = NULL
   if (!is.list(flips)) {
     d =flips_to_zplot_df(flips)
     if (show_arrows) {
@@ -413,11 +438,13 @@ flips_to_kplot_df = function(flips) {
 #' @param flips the sequence of coin flips (1's and 0's) to visualize.
 #' @param s the top barrier for the Bernoulli process.
 #' @param t the right barrier for the Bernoulli process.
+#' @importFrom ggplot2 scale_x_continuous scale_y_continuous geom_segment qplot
 #' @examples
 #' flips = c(0, 0, 1)
 #' kplot(flips, 2, 3)
 #' @export
 kplot = function(flips, s, t) {
+  k = path = num = NULL
   if (!is.list(flips)) {
     d = flips_to_kplot_df(flips)
     p = qplot(k, path, data=d, geom="line") +
@@ -457,6 +484,7 @@ psnb = function(q, prob, s, t) {
 
 #' @export
 qsnb = function(p, prob, s, t) {
+  pr = NULL
   if (length(prob) > 1)
     stop("psnb prob-parameter may only have length 1")
   support = min(s, t):t

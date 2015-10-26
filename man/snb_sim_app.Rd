@@ -12,7 +12,7 @@ snb_sim_app(port = 8100L, launch.browser = getOption("shiny.launch.browser",
 
 \item{launch.browser}{If true, the system's default web browser will be launched automatically after the app is started. Defaults to true in interactive sessions only.}
 
-\item{workerId:}{Can generally be ignored. Exists to help some editions of Shiny Serv}
+\item{workerId}{Can generally be ignored. Exists to help some editions of Shiny Server.}
 }
 \description{
 This function launches a shiny web page for visualizing the stopped

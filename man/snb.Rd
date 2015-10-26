@@ -5,20 +5,27 @@
 \alias{psnb}
 \alias{qsnb}
 \alias{rsnb}
-\alias{snb}
 \title{The Stopped Negative Binomial Distribution}
 \usage{
 dsnb(x, prob, s, t)
 psnb(q, prob, s, t)
+qsnb(p, prob, s, t)
+rsnb(n, prob, s, t)
 }
 \arguments{
-\item{x,q}{vector of quantiles.}
+\item{x}{vector of quantiles.}
 
 \item{prob}{probility of success on each coin flip.}
 
 \item{s}{the ceiling for the snb process}
 
 \item{t}{the length of the the process can run for.}
+
+\item{q}{vector of quantiles.}
+
+\item{p}{vector of probabilities.}
+
+\item{n}{number of observations.}
 }
 \value{
 'dsnb' give the density, 'psnb' give the distribution function
