@@ -120,8 +120,10 @@ dsnb_stack_plot = function(p, s, t, x, offset) {
     d$x = d$x+offset
   d = melt(data=d, id.vars="x") 
   names(d)[names(d) == "variable"] = "Outcome"
-  qplot(x=factor(x), y=value, data=d, fill=Outcome, geom="bar", 
-    position="stack", stat="identity", ylab="f(k,p,s,t)", xlab="k")
+  stop("here")
+  ggplot(data=d, aes(x=factor(x), y=value, fill=Outcome)) +
+    geom_bar(position="stack", stat="identity") + xlab("k") +
+    ylab=("f(k,p,s,t)")
 }
 
 #' The Conditional Stopped Negative Binomial Density

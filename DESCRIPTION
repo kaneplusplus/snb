@@ -1,11 +1,16 @@
 Package: snb
 Type: Package
-Title: The Stopped Negative Binomial 
+Title: The Stopped Negative Binomial
 Version: 0.1
 Date: 2015-01-03
 Author: Michael J. Kane
 Maintainer: Michael Kane <kaneplusplus@gmail.com>
 Description: This package provides distribution functions and analyses for the
     Stopped Negative Binomial distributions.
-Imports: foreach, ggplot2, reshape2, shiny
+Imports:
+    foreach,
+    ggplot2,
+    reshape2,
+    shiny
 License: Apache License 2.0
+RoxygenNote: 5.0.1
