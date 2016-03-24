@@ -7,13 +7,13 @@
 dsnb_stacked(x, p, s, t)
 }
 \arguments{
-\item{x}{vector of quantiles}
+\item{x}{quantile}
 
-\item{p}{vector of probabilities}
+\item{p}{success probability}
 
-\item{s}{the number of heads to stop at.}
+\item{s}{number of successes}
 
-\item{t}{the number of tails to stop at.}
+\item{t}{number of failures}
 }
 \description{
 Stacked distribution function for the stopped negative binomial distribution.
