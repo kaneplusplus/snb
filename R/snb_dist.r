@@ -1,28 +1,48 @@
-require(foreach)
-require(ggplot2)
-require(reshape2)
-
-R = function(k, p, t) {
-  choose(k-1, k-t) * p^(k-t) * (1-p)^t
-}
-
-N = function(k, p, s) {
-  choose(k-1, s-1) * p^s * (1-p)^(k-s)
-}
-
-Rc = function(k, s, t, shape1, shape2) {
-  suppressWarnings({ret = choose(k-1, k-t) * beta(shape1 + k - t, t + shape2) / 
-    beta(shape1, shape2)})
-  ret[!is.finite(ret)] = 0
+S = function(k, p, s) {
+  if (p < 0 || p > 1) stop("p must be between zero and one.")
+  if (s < 0) stop("s must be non-negative")
+  ret = choose(k-1, s-1) * p^s * (1-p)^(k-s)
+  ret[k < s] = 0
   ret
 }
 
-Nc = function(k, s, t, shape1, shape2) {
-  suppressWarnings({ret = choose(k-1, s-1) * beta(shape1 + s, k - s + shape2) / 
-    beta(shape1, shape2)})
-  ret[!is.finite(ret)] = 0
+#' Stack the distribution by responders and non-responders.
+#'
+#' Stacked distribution function for the stopped negative binomial distribution.
+#' @param x quantile
+#' @param p success probability
+#' @param s number of successes
+#' @param t number of failures
+#' @export
+dsnb_stacked = function(x, p, s, t) {
+  ret = cbind(x, S(x, p, s), S(x, 1-p, t))
+  colnames(ret) = c("x", "s", "t")
   ret
 }
+
+
+
+#R = function(k, p, t) {
+#  choose(k-1, k-t) * p^(k-t) * (1-p)^t
+#}
+
+#N = function(k, p, s) {
+#  choose(k-1, s-1) * p^s * (1-p)^(k-s)
+#}
+
+#Rc = function(k, s, t, shape1, shape2) {
+#  suppressWarnings({ret = choose(k-1, k-t) * beta(shape1 + k - t, t + shape2) / 
+#    beta(shape1, shape2)})
+#  ret[!is.finite(ret)] = 0
+#  ret
+#}
+
+#Nc = function(k, s, t, shape1, shape2) {
+#  suppressWarnings({ret = choose(k-1, s-1) * beta(shape1 + s, k - s + shape2) / 
+#    beta(shape1, shape2)})
+#  ret[!is.finite(ret)] = 0
+#  ret
+#}
 
 dsnb_private = function(x, p, s, t) {
   k=NULL
@@ -35,66 +55,39 @@ dsnb_private = function(x, p, s, t) {
   ret
 }
 
-# Remember, shape1 and shape2 are data plus priors.
-dsnbc_private = function(x, s, t, shape1, shape2) {
-  k = NULL
-  a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
-  b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
-  d = a + b
-  inds = which(x %in% 1:length(d))
-  ret = rep(0, length(x))
-  ret[inds] = d[x[inds]]
-  ret
-}
+## Remember, shape1 and shape2 are data plus priors.
+#dsnbc_private = function(x, s, t, shape1, shape2) {
+#  k = NULL
+#  a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
+#  b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
+#  d = a + b
+#  inds = which(x %in% 1:length(d))
+#  ret = rep(0, length(x))
+#  ret[inds] = d[x[inds]]
+#  ret
+#}
 
-#' Stack the distribution by responders and non-responders.
-#'
-#' Stacked distribution function for the stopped negative binomial distribution.
-#' @param x vector of quantiles
-#' @param p vector of probabilities
-#' @param s the number of heads to stop at.
-#' @param t the number of tails to stop at.
-#' @export
-dsnb_stacked = function(x, p, s, t) {
-  k = i = NULL
-  a = foreach(k=1:(s+t-1), .combine=c) %do% N(k, p, s)
-  b = foreach(k=1:(s+t-1), .combine=c) %do% R(k, p, t)
-  ret = foreach (i=x, .combine=rbind) %do% {
-    v = c(i, 0, 0)
-    if (i %in% 1:max(x)) {
-      v[2] = a[i]
-      v[3] = b[i]
-    }
-    v
-  }
-  colnames(ret) = c("x", "s", "t")
-  rownames(ret) = NULL
-  ret[is.na(ret[,2]), 2] = 0
-  ret[is.na(ret[,3]), 3] = 0
-  ret
-}
+#dsnb_private_stacked = dsnb_stacked
 
-dsnb_private_stacked = dsnb_stacked
-
-dsnbc_private_stacked = function(x, shape1, shape2, s, t) {
-  k=i=NULL
-  a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
-  b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
-  d = a + b
-  u = a/sum(d)
-  r = b/sum(d)
-  ret = foreach (i=x, .combine=rbind) %do% {
-    v = c(i, 0, 0)
-    if (i %in% 1:length(d)) {
-      v[2] = a[i] #u[i] 
-      v[3] = b[i] #r[i] 
-    }
-    v
-  }
-  colnames(ret) = c("x", "s", "t")
-  rownames(ret) = NULL
-  ret
-}
+#dsnbc_private_stacked = function(x, shape1, shape2, s, t) {
+#  k=i=NULL
+#  a = foreach(k=1:(s+t-1), .combine=c) %do% Nc(k, s, t, shape1, shape2)
+#  b = foreach(k=1:(s+t-1), .combine=c) %do% Rc(k, s, t, shape1, shape2)
+#  d = a + b
+#  u = a/sum(d)
+#  r = b/sum(d)
+#  ret = foreach (i=x, .combine=rbind) %do% {
+#    v = c(i, 0, 0)
+#    if (i %in% 1:length(d)) {
+#      v[2] = a[i] #u[i] 
+#      v[3] = b[i] #r[i] 
+#    }
+#    v
+#  }
+#  colnames(ret) = c("x", "s", "t")
+#  rownames(ret) = NULL
+#  ret
+#}
 
 
 #' The Stopped Negative Binomial p.m.f. Stack-Plot
@@ -108,6 +101,7 @@ dsnbc_private_stacked = function(x, shape1, shape2, s, t) {
 #' @param offset an offset on the domain of the distribution. This is 
 #' used when getting the conditional distribution where the domain does 
 #' not start at 1.
+#' @import ggplot2
 #' @return a plot of the probability mass function.
 #' @export
 dsnb_stack_plot = function(p, s, t, x, offset) {
@@ -122,7 +116,7 @@ dsnb_stack_plot = function(p, s, t, x, offset) {
   names(d)[names(d) == "variable"] = "Outcome"
   ggplot(data=d, aes(x=factor(x), y=value, fill=Outcome)) +
     geom_bar(position="stack", stat="identity") + xlab("k") +
-    ylab=("f(k,p,s,t)")
+    ylab("f(k,p,s,t)")
 }
 
 #' The Conditional Stopped Negative Binomial Density
@@ -166,7 +160,6 @@ cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
 #' @param t the right barrier for the snb process.
 #' @param prior the shape parameters of the prior on the success probability.
 #' @importFrom reshape2 melt
-#' @importFrom ggplot2 qplot
 #' @export
 cdsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
   value = Outcome = NULL
@@ -245,89 +238,64 @@ dsnbc_stack = function(d, s, t, shape1=0.5, shape2=0.5,
 #' @importFrom foreach foreach %do%
 #' @export
 dsnb = function(x, prob, s, t) {
-  if (length(s) != 1)
-    stop("dsnb s-parameter may only have length 1")
-  if (length(t) != 1)
-    stop("dsnb t-parameter may only have length 1")
-  if (s < 1) 
-    stop("dsnb s-parameter must be at least 1")
-  if (t < 1) 
-    stop("dsnb t-parameter must be at least 1")
+  if (s < 1) stop("dsnb s-parameter must be at least 1")
+  if (t < 1) stop("dsnb t-parameter must be at least 1")
   if (any(prob > 1) || any(prob < 0))
     stop("dsnb prob-parameter must be between zero and one inclusive")
-  ret = c()
-  if (length(x) > 1 && length(prob) > 1) {
-    pp=xx=NULL
-    ret = foreach(xx=x, pp=prob, .combine=c) %do% {
-      dsnb_private(xx, pp, s, t)
-    }
-  } else if (length(x) > 1 && length(prob) == 1) {
-    ret = foreach(xx=x, .combine=c) %do% {
-      dsnb_private(xx, prob, s, t)
-    }
-  } else if (length(x) == 1 && length(prob) > 1 ) {
-    ret = foreach(pp=prob, .combine=c) %do% {
-      dsnb_private(x, pp, s, t)
-    }
-  } else if (length(x) == 1 && length(prob) == 1 ) {
-    ret = dsnb_private(x, prob, s, t)
-  }
-  ret
+  apply(dsnb_stacked(x, prob, s, t)[,2:3], 1, sum)
 }
 
 #' @export
 rsnb = function(n, prob, s, t) {
-  if (length(prob) > 1)
-    stop("rsnb prob-parameter must have length 1")
   # Get the distribution function.
-  support = min(s,t):(t+1-1)
+  support = min(s,t):(t+s-1)
   ps = dsnb(support, prob, s, t)
   sample(support, n, replace=TRUE, prob=ps)
 }
 
-#' Simulate the binomial process
-#'
-#' Generate coin flip trajectories that stop after either s heads or t tails.
-#' @param n the number of trajectories to simulate.
-#' @param prob the probability of a head.
-#' @param s the number of heads to stop at.
-#' @param t the number of tails to stop at.
-#' @param drop if TRUE then return the results as a matrix. Otherwise return as a list.
-#' @export
-snb_flips = function(n, prob, s, t, drop=TRUE) {
-  if (length(prob) > 1)
-    stop("rsnb prob-parameter must have length 1")
-  flips = foreach(i=1:n) %do% {
-    flip = rbinom(s+t-1, 1, prob=prob)
-    path = c(cumsum(flip), sum(flip))
-    m = which(path >= s)
-    if (length(m) == 0) {
-      m = s+t-1
-    } else {
-      m = min(m)
-    }
-    r = which(path < 0:(s+t-1)-(t-s+1))
-    if (length(r) == 0) {
-      r = s+t-1
-    } else {
-      r = min(r)
-    }
-    flip[1:min(m, r)]
-  }
-  if (n == 1 && drop) {
-    flips = unlist(flips)
-  }
-  flips
-}
+##' Simulate the binomial process
+##'
+##' Generate coin flip trajectories that stop after either s heads or t tails.
+##' @param n the number of trajectories to simulate.
+##' @param prob the probability of a head.
+##' @param s the number of heads to stop at.
+##' @param t the number of tails to stop at.
+##' @param drop if TRUE then return the results as a matrix. Otherwise return as a list.
+## @export
+#snb_flips = function(n, prob, s, t, drop=TRUE) {
+#  if (length(prob) > 1)
+#    stop("rsnb prob-parameter must have length 1")
+#  flips = foreach(i=1:n) %do% {
+#    flip = rbinom(s+t-1, 1, prob=prob)
+#    path = c(cumsum(flip), sum(flip))
+#    m = which(path >= s)
+#    if (length(m) == 0) {
+#      m = s+t-1
+#    } else {
+#      m = min(m)
+#    }
+#    r = which(path < 0:(s+t-1)-(t-s+1))
+#    if (length(r) == 0) {
+#      r = s+t-1
+#    } else {
+#      r = min(r)
+#    }
+#    flip[1:min(m, r)]
+#  }
+#  if (n == 1 && drop) {
+#    flips = unlist(flips)
+#  }
+#  flips
+#}
 
-flips_to_zplot_df = function(flips) {
-  d = data.frame(k=0:length(flips))
-  d$head = c(0, cumsum(flips))
-  d$tail= c(0, cumsum(!(flips)))
-  d$headEnd = c(d$head[-1], NA)
-  d$tailEnd = c(d$tail[-1], NA)
-  d
-}
+#flips_to_zplot_df = function(flips) {
+#  d = data.frame(k=0:length(flips))
+#  d$head = c(0, cumsum(flips))
+#  d$tail= c(0, cumsum(!(flips)))
+#  d$headEnd = c(d$head[-1], NA)
+#  d$tailEnd = c(d$tail[-1], NA)
+#  d
+#}
 
 #' The Z-Plot for the Binomial Process
 #'
@@ -344,7 +312,6 @@ flips_to_zplot_df = function(flips) {
 #' (default is 0.2).
 #' @param xlab the name of the x axis.
 #' @param ylab the name of the y axis.
-#' @importFrom ggplot2 ggplot geom_segment scale_y_continuous aes
 #' @importFrom grid arrow
 #' @examples
 #' flips = c(0, 0, 1)
@@ -439,20 +406,20 @@ flips_to_kplot_df = function(flips) {
 #' @param flips the sequence of coin flips (1's and 0's) to visualize.
 #' @param s the top barrier for the Bernoulli process.
 #' @param t the right barrier for the Bernoulli process.
-#' @importFrom ggplot2 scale_x_continuous scale_y_continuous geom_segment qplot
 #' @examples
 #' flips = c(0, 0, 1)
 #' kplot(flips, 2, 3)
 #' @export
 kplot = function(flips, s, t) {
-  k = path = num = NULL
   if (!is.list(flips)) {
     d = flips_to_kplot_df(flips)
-    p = qplot(k, path, data=d, geom="line") +
-      scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
-      scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, color="red")
-    p = stairs(p, t, s+t-1)
+    p = qplot(k, path, data = d, geom = "line") +
+      scale_x_continuous(breaks = 0:(t + s), limits = c(0, t + s)) +
+      scale_y_continuous(breaks = 0:s, limits=c(0, s+0.15)) +
+#      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, linetype=2) +
+#      geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, linetype=2)
+      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, color="green", linetype=1) +
+      geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, col="red")
   } else {
     flip_set = lapply(flips, flips_to_kplot_df)
     for (i in 1:length(flip_set)) {
@@ -460,16 +427,20 @@ kplot = function(flips, s, t) {
       flip_set[[i]]$k = jitter(flip_set[[i]]$k)
       flip_set[[i]]$k[flip_set[[i]]$k < 0] = 0
     }
-    d = Reduce(rbind, flip_set)[,-(4:5)]
-    p = qplot(k, path, data=d, geom="path", group=num) +
-      scale_x_continuous(breaks=0:(t+s), limits=c(0, t+s)) +
-      scale_y_continuous(breaks=0:s, limits=c(0, s)) +
-      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, color="red") 
-    p = stairs(p, t, s+t-1)
+    d = Reduce(rbind, flip_set)[, -(4:5)]
+    p = qplot(k, path, data = d, geom = "path", group = num) +
+        scale_x_continuous(breaks=0:(t+s), limits = c(0, t+s)) +
+#        geom_segment(x = s, y = s, xend = (t + s - 1), yend = s,
+#                     linetype=2) +
+#        geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, linetype=2)
+        geom_segment(x = s, y = s, xend = (t + s - 1), yend = s,
+                     color = "green") +
+        geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, col="red")
     p
   }
   p
 }
+
 
 #' @export
 psnb = function(q, prob, s, t) {
@@ -504,4 +475,31 @@ qsnb = function(p, prob, s, t) {
   ret[ret < support[1]-1] = support[1] - 1
   ret
 }
+
+#' Expected value of an SNB
+#' 
+#' Find the expected size of an SNB distribution with specified parameters.
+#' @param p success probability
+#' @param s number of successes 
+#' @param t number of failures
+#' @export
+esnb = function(p, s, t) {
+  ds = dsnb_stacked(min(s,t):(s+t-1), p, s, t)
+  ds[,2:3] = ds[,1] * ds[,2:3]
+  sum(as.vector(ds[,2:3]))
+}
+
+#' Expected size for the DKZ 2-stage trial
+#' 
+#' Find the expected size of the DKZ trial with specified parameters.
+edkz = function(n1, r1, p1, n2, r2, p2) {
+  EY1 = esnb(p1, r1, n1-r1+1)
+  X12 = cbind(0:r1, dbinom(0:r1, r1, p2/p1))
+  EY2 = 0
+  for (i in 1:nrow(X12)) {
+    EY2 = EY2 + X12[i,2] * esnb(p2, r2-X12[i,1], n2-r2-r1+X12[i,1]+1)
+  }  
+  EY1 + EY2
+}
+
 

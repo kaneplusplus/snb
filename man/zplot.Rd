@@ -2,7 +2,7 @@
 % Please edit documentation in R/snb_dist.r
 \name{zplot}
 \alias{zplot}
-\title{The Z-Plot for the Binomial Process}
+\title{Simulate the binomial process}
 \usage{
 zplot(flips, s, t, show_arrows = TRUE, unif_jitter = 0.2, xlab = NULL,
   ylab = NULL)
@@ -12,9 +12,9 @@ zplot(flips, s, t, show_arrows = TRUE, unif_jitter = 0.2, xlab = NULL,
 Note that this can be a list in which case multiple processes will be 
 shown.}
 
-\item{s}{the top barrier for the Bernoulli process.}
+\item{s}{the number of heads to stop at.}
 
-\item{t}{the right barrier for the Bernoulli process.}
+\item{t}{the number of tails to stop at.}
 
 \item{show_arrows}{should arrows be shown in the Bernoullis process path?}
 
@@ -24,10 +24,23 @@ shown.}
 \item{xlab}{the name of the x axis.}
 
 \item{ylab}{the name of the y axis.}
+
+\item{n}{the number of trajectories to simulate.}
+
+\item{prob}{the probability of a head.}
+
+\item{drop}{if TRUE then return the results as a matrix. Otherwise return as a list.
+The Z-Plot for the Binomial Process
+
+Visualize the stopped Bernoulli process with horizontal axis counting 
+successes and vertical axis counting failure.}
+
+\item{s}{the top barrier for the Bernoulli process.}
+
+\item{t}{the right barrier for the Bernoulli process.}
 }
 \description{
-Visualize the stopped Bernoulli process with horizontal axis counting 
-successes and vertical axis counting failure.
+Generate coin flip trajectories that stop after either s heads or t tails.
 }
 \examples{
 flips = c(0, 0, 1)
