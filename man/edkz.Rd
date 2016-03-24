@@ -6,6 +6,19 @@
 \usage{
 edkz(n1, r1, p1, n2, r2, p2)
 }
+\arguments{
+\item{n1}{maximum number of enrollees in the first stage.}
+
+\item{r1}{number of successes to move to stage-2.}
+
+\item{p1}{success probability in stage-1.}
+
+\item{n2}{maximum number of enrollees in stage-2.}
+
+\item{r2}{number of successes in stage-2 for success endpoint.}
+
+\item{p2}{success probability in stage-2.}
+}
 \description{
 Find the expected size of the DKZ trial with specified parameters.
 }

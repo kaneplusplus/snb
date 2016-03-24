@@ -492,6 +492,13 @@ esnb = function(p, s, t) {
 #' Expected size for the DKZ 2-stage trial
 #' 
 #' Find the expected size of the DKZ trial with specified parameters.
+#' @param n1 maximum number of enrollees in the first stage.
+#' @param r1 number of successes to move to stage-2.
+#' @param p1 success probability in stage-1.
+#' @param n2 maximum number of enrollees in stage-2.
+#' @param r2 number of successes in stage-2 for success endpoint.
+#' @param p2 success probability in stage-2.
+#' @export
 edkz = function(n1, r1, p1, n2, r2, p2) {
   EY1 = esnb(p1, r1, n1-r1+1)
   X12 = cbind(0:r1, dbinom(0:r1, r1, p2/p1))
