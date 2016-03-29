@@ -109,7 +109,7 @@ dsnb_stack_plot = function(p, s, t, x, offset) {
   if (missing(x))
     x = min(s,t):(t+s-1)
   d = as.data.frame(
-    dsnb_private_stacked(x, p=p, s=s, t=t))
+    dsnb_stacked(x, p=p, s=s, t=t))
   if (!missing(offset))
     d$x = d$x+offset
   d = melt(data=d, id.vars="x") 
