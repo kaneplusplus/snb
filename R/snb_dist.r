@@ -502,10 +502,17 @@ esnb = function(p, s, t) {
 edkz = function(n1, r1, p1, n2, r2, p2) {
   EY1 = esnb(p1, r1, n1-r1+1)
   X12 = cbind(0:r1, dbinom(0:r1, r1, p2/p1))
+  stage1_success = cbind((n1-r1):n1, S((n1-r1):n1, p1, r1))
   EY2 = 0
-  for (i in 1:nrow(X12)) {
-    EY2 = EY2 + X12[i,2] * esnb(p2, r2-X12[i,1], n2-r2-r1+X12[i,1]+1)
-  }  
+  for (i in 1:nrow(excess)) {
+    for (j in 1:nrow(X12)) {
+      EY2 = EY2 + stage1_success[i,2] * X12[j,2] * 
+        esnb(p2, r2-X12[j,1], n2+n1-stage1_success[i,1]-r2-r1+X12[j,1]+1)
+    }
+  }
+#  for (i in 1:nrow(X12)) {
+#    EY2 = EY2 + X12[i,2] * esnb(p2, r2-X12[i,1], n2-r2-r1+X12[i,1]+1)
+#  }  
   EY1 + EY2
 }
 
