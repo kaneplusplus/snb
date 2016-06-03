@@ -2,7 +2,7 @@
 % Please edit documentation in R/snb_dist.r
 \name{esnb}
 \alias{esnb}
-\title{Expected value of an SNB}
+\title{Expected Value of the SNB Distribution}
 \usage{
 esnb(p, s, t)
 }

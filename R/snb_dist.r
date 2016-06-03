@@ -89,6 +89,33 @@ dsnb_private = function(x, p, s, t) {
 #  ret
 #}
 
+#' The Stacked Plot
+#'
+#' The stacked plot of the probability mass function for the snb showing
+#' the contributions from N (the top barrier) and R (the right barrier).
+#' @param p the probability of a success on each coin flip. 
+#' @param s the top barrier for the snb process.
+#' @param t the right barrier for the snb process.
+#' @param x the range of the distribution (defaults to min(s,t):(t+s-1)).
+#' @param offset an offset on the domain of the distribution. This is 
+#' used when getting the conditional distribution where the domain does 
+#' not start at 1.
+#' @import ggplot2
+#' @return a plot of the probability mass function.
+#' @export
+stacked_plot = function(x, s, t) {
+  if (missing(s) && missing(t) && all(names(x) %in% c("x", "s", "t")) {
+    s = x$s
+    t = x$t
+    x = x$x
+  }
+  d = data.frame(list(x=x, s=s, t=t))
+  d = melt(data=d, id.vars="x") 
+  names(d)[names(d) == "variable"] = "Outcome"
+  ggplot(data=d, aes(x=factor(x), y=value, fill=Outcome)) +
+    geom_bar(position="stack", stat="identity") + xlab("k") +
+    ylab("f(k,p,s,t)")
+}
 
 #' The Stopped Negative Binomial p.m.f. Stack-Plot
 #'
@@ -125,34 +152,31 @@ dsnb_stack_plot = function(p, s, t, x, offset) {
 #' the distribution of the stopping time when the binomial process has not 
 #' reached one of its endpoints. The success probability is fitted using 
 #' fit_flips with specified prior.
-#' @param d a sequence of 1's and 0's corresponding to the binomial process.
+#' @param x quantile
+#' @param shape the shape parameters of the beta prior.
 #' @param s the top barrier for the snb process.
 #' @param t the right barrier for the snb process.
-#' @param prior the shape parameters of the prior on the success probability.
 #' @export
-cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
-  fit = fit_flips(d, s, t, prior)
-  phat = (fit['shape1'] - 1) / (fit['shape1'] + fit['shape2'] - 2)
-  total_range = s+t-1
-  cond_range = (length(d):total_range)
-  cond_s = s - sum(d)
-  cond_t = t - sum(1-d)
-  # Use the mode unless we don't have enough data.
-  p_hat = if(fit[1] < 1 || fit[2] < 1) {
-            fit[1] / (fit[1] + fit[2])
-          } else {
-            (fit[1] - 1) / (fit[1] + fit[2] - 2)
-          }
-  ret = as.data.frame(dsnb_stacked(min(cond_s,cond_t):(cond_s+cond_t-1), 
-                      p_hat, cond_s, cond_t))
-  ret$x = ret$x + length(d)
-  ret
+cdsnb_stacked = function(x, shape, s, t) {
+  ret=foreach(k=x, .combine=rbind) %do% {
+    rets=0
+    rett=0
+    normalizer = beta(shape[1], shape[2])
+    if (s <= k && k <= s+t-1)
+      rets = rets + choose(k-1, s-1) * beta(shape[1]+s, k-s+shape[2])/normalizer
+    if (t <= k && k <= s+t-1)
+      rett = rett + choose(k-1, t-1) * beta(shape[1]+k-t, t+shape[2])/normalizer
+    c(k, rets, rett)
+  }
+  rownames(ret) = NULL
+  colnames(ret) = c("k", "s", "t")
+  as.data.frame(ret)
 }
 
 #' The Conditional Stopped Negative Binomial Density Plot
 #' 
 #' A plot of the stacked snb density function. The plot shows the distribution
-#' of teh stopping time when the binomial process has not reached one of 
+#' of the stopping time when the binomial process has not reached one of 
 #' its endpoints. The success probabilty is fitted using the fit_flips function
 #' with specefied prior.
 #' @param d a sequence of 1's and 0's corresponding to the binomial process.
@@ -161,9 +185,9 @@ cdsnb = function(d, s, t, prior=c(0.5, 0.5)) {
 #' @param prior the shape parameters of the prior on the success probability.
 #' @importFrom reshape2 melt
 #' @export
-cdsnb_stack_plot = function(d, s, t, prior=c(0.5, 0.5)) {
+cdsnb_stack_plot = function(d, shape, s, t) {
   value = Outcome = NULL
-  x = cdsnb(d, s, t, prior)
+  x = cdsnb(d, shape s, t)
   x = melt(data=x, id.vars="x") 
   names(x)[names(x) == "variable"] = "Outcome"
   qplot(x=factor(x), y=value, data=x, fill=Outcome, geom="bar", 
@@ -476,7 +500,7 @@ qsnb = function(p, prob, s, t) {
   ret
 }
 
-#' Expected value of an SNB
+#' Expected Value of the SNB Distribution
 #' 
 #' Find the expected size of an SNB distribution with specified parameters.
 #' @param p success probability
@@ -487,6 +511,47 @@ esnb = function(p, s, t) {
   ds = dsnb_stacked(min(s,t):(s+t-1), p, s, t)
   ds[,2:3] = ds[,1] * ds[,2:3]
   sum(as.vector(ds[,2:3]))
+}
+
+#' Variance of the SNB Distribution
+#' 
+#' Find the variance of the SNB distribution with specified parameters.
+#' @param p success probability
+#' @param s number of successes 
+#' @param t number of failures
+#' @export
+vsnb = function(p, s, t) {
+  ds = dsnb_stacked(min(s,t):(s+t-1), p, s, t)
+  ds[,2:3] = ds[,1]^2 * ds[,2:3]
+  sum(as.vector(ds[,2:3])) - esnb(p, s, t)^2
+}
+
+#' Expected Value of the Conditional SNB Distribution
+#' 
+#' Find the expected size of the conditional SNB distribution with specified 
+#' parameters.
+#' @param s number of successes 
+#' @param t number of failures
+#' @param shape the shape parameters of the beta prior.
+#' @export
+ecsnb = function(shape, s, t) {
+  ds = cdsnb_stacked(min(s,t):(s+t-1), s, t, shape)
+  ds[,2:3] = ds[,1] * ds[,2:3]
+  sum(as.vector(ds[,2:3]))
+}
+
+#' Variance of the Conditional SNB Distribution
+#' 
+#' Find the variance of the conditional SNB distribution with specified 
+#' parameters.
+#' @param s number of successes.
+#' @param t number of failures.
+#' @param shape the shape parameters of the beta prior.
+#' @export
+vcsnb = function(shape, s, t) {
+  ds = cdsnb_stacked(min(s,t):(s+t-1), s, t, shape)
+  ds[,2:3] = ds[,1]^2 * ds[,2:3]
+  sum(as.vector(ds[,2:3])) - ecsnb(shape, s, t)^2 
 }
 
 #' Expected size for the DKZ 2-stage trial
