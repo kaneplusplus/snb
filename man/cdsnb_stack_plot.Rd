@@ -4,7 +4,7 @@
 \alias{cdsnb_stack_plot}
 \title{The Conditional Stopped Negative Binomial Density Plot}
 \usage{
-cdsnb_stack_plot(d, s, t, prior = c(0.5, 0.5))
+cdsnb_stack_plot(d, shape, s, t)
 }
 \arguments{
 \item{d}{a sequence of 1's and 0's corresponding to the binomial process.}
@@ -17,7 +17,7 @@ cdsnb_stack_plot(d, s, t, prior = c(0.5, 0.5))
 }
 \description{
 A plot of the stacked snb density function. The plot shows the distribution
-of teh stopping time when the binomial process has not reached one of 
+of the stopping time when the binomial process has not reached one of 
 its endpoints. The success probabilty is fitted using the fit_flips function
 with specefied prior.
 }

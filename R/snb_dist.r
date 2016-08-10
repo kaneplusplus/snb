@@ -104,7 +104,7 @@ dsnb_private = function(x, p, s, t) {
 #' @return a plot of the probability mass function.
 #' @export
 stacked_plot = function(x, s, t) {
-  if (missing(s) && missing(t) && all(names(x) %in% c("x", "s", "t")) {
+  if (missing(s) && missing(t) && all(names(x) %in% c("x", "s", "t"))) {
     s = x$s
     t = x$t
     x = x$x
@@ -117,10 +117,39 @@ stacked_plot = function(x, s, t) {
     ylab("f(k,p,s,t)")
 }
 
-#' The Stopped Negative Binomial p.m.f. Stack-Plot
+#' The Stopped Negative Binomial P.M.F. Plot
 #'
-#' The stacked plot of the probability mass function for the snb showing
+#' The plot of the probability mass function for the SNB showing
 #' the contributions from N (the top barrier) and R (the right barrier).
+#' @param p the probability of a success on each coin flip. 
+#' @param s the top barrier for the snb process.
+#' @param t the right barrier for the snb process.
+#' @param x the range of the distribution (defaults to min(s,t):(t+s-1)).
+#' @param offset an offset on the domain of the distribution. This is 
+#' used when getting the conditional distribution where the domain does 
+#' not start at 1.
+#' @import ggplot2
+#' @return a plot of the probability mass function.
+#' @export
+dsnb_plot = function(p, s, t, x, offset) {
+  value = Outcome = k = NULL
+  if (missing(x))
+    x = min(s,t):(t+s-1)
+  d = as.data.frame(
+    dsnb_stacked(x, p=p, s=s, t=t))
+  if (!missing(offset))
+    d$x = d$x+offset
+  d$y = apply(d[,2:3], 1, sum)
+  ggplot(data=d, aes(x=factor(x), y=y)) + 
+    geom_bar(position="stack", stat="identity") + xlab("k") +
+    ylab("f(k,p,s,t)")
+}
+
+#' The Stopped Negative Binomial P.M.F. Stack-Plot
+#'
+#' The stacked plot of the probability mass function for the SNB showing
+#' the contributions from N (the top barrier) and R (the right barrier) by
+#' color.
 #' @param p the probability of a success on each coin flip. 
 #' @param s the top barrier for the snb process.
 #' @param t the right barrier for the snb process.
@@ -187,7 +216,7 @@ cdsnb_stacked = function(x, shape, s, t) {
 #' @export
 cdsnb_stack_plot = function(d, shape, s, t) {
   value = Outcome = NULL
-  x = cdsnb(d, shape s, t)
+  x = cdsnb(d, shape, s, t)
   x = melt(data=x, id.vars="x") 
   names(x)[names(x) == "variable"] = "Outcome"
   qplot(x=factor(x), y=value, data=x, fill=Outcome, geom="bar", 
@@ -430,20 +459,27 @@ flips_to_kplot_df = function(flips) {
 #' @param flips the sequence of coin flips (1's and 0's) to visualize.
 #' @param s the top barrier for the Bernoulli process.
 #' @param t the right barrier for the Bernoulli process.
+#' @param bw should the plot be in black and white?
 #' @examples
 #' flips = c(0, 0, 1)
 #' kplot(flips, 2, 3)
 #' @export
-kplot = function(flips, s, t) {
+kplot = function(flips, s, t, bw=FALSE) {
   if (!is.list(flips)) {
     d = flips_to_kplot_df(flips)
-    p = qplot(k, path, data = d, geom = "line") +
-      scale_x_continuous(breaks = 0:(t + s), limits = c(0, t + s)) +
-      scale_y_continuous(breaks = 0:s, limits=c(0, s+0.15)) +
-#      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, linetype=2) +
-#      geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, linetype=2)
-      geom_segment(x=s, y=s, xend=(t+s-1), yend=s, color="green", linetype=1) +
-      geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, col="red")
+    if (bw) {
+      p = qplot(k, path, data = d, geom = "line") +
+        scale_x_continuous(breaks = 0:(t + s), limits = c(0, t + s)) +
+        scale_y_continuous(breaks = 0:s, limits=c(0, s+0.15)) +
+        geom_segment(x=s, y=s, xend=(t+s-1), yend=s, linetype=2) +
+        geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, linetype=2)
+    } else {
+      p = qplot(k, path, data = d, geom = "line") +
+        scale_x_continuous(breaks = 0:(t + s), limits = c(0, t + s)) +
+        scale_y_continuous(breaks = 0:s, limits=c(0, s+0.15)) +
+        geom_segment(x=s,y=s,xend=(t+s-1),yend=s, color="green", linetype=1) +
+        geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, col="red")
+    }
   } else {
     flip_set = lapply(flips, flips_to_kplot_df)
     for (i in 1:length(flip_set)) {
@@ -452,15 +488,19 @@ kplot = function(flips, s, t) {
       flip_set[[i]]$k[flip_set[[i]]$k < 0] = 0
     }
     d = Reduce(rbind, flip_set)[, -(4:5)]
-    p = qplot(k, path, data = d, geom = "path", group = num) +
-        scale_x_continuous(breaks=0:(t+s), limits = c(0, t+s)) +
-#        geom_segment(x = s, y = s, xend = (t + s - 1), yend = s,
-#                     linetype=2) +
-#        geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, linetype=2)
+    if (bw) {
+      p = qplot(k, path, data = d, geom = "path", group = num) +
+          scale_x_continuous(breaks=0:(t+s), limits = c(0, t+s)) +
+          geom_segment(x = s, y = s, xend = (t + s - 1), yend = s,
+                       linetype=2) +
+          geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, linetype=2)
+    } else {
+      p = qplot(k, path, data = d, geom = "path", group = num) +
+          scale_x_continuous(breaks=0:(t+s), limits = c(0, t+s)) +
         geom_segment(x = s, y = s, xend = (t + s - 1), yend = s,
                      color = "green") +
         geom_segment(x=t, y=0, xend=(s+t-1), yend=s-1, col="red")
-    p
+    }
   }
   p
 }
@@ -530,12 +570,12 @@ vsnb = function(p, s, t) {
 #' 
 #' Find the expected size of the conditional SNB distribution with specified 
 #' parameters.
+#' @param shape the shape parameters of the beta prior.
 #' @param s number of successes 
 #' @param t number of failures
-#' @param shape the shape parameters of the beta prior.
 #' @export
 ecsnb = function(shape, s, t) {
-  ds = cdsnb_stacked(min(s,t):(s+t-1), s, t, shape)
+  ds = cdsnb_stacked(min(s,t):(s+t-1), shape, s, t)
   ds[,2:3] = ds[,1] * ds[,2:3]
   sum(as.vector(ds[,2:3]))
 }
@@ -544,12 +584,12 @@ ecsnb = function(shape, s, t) {
 #' 
 #' Find the variance of the conditional SNB distribution with specified 
 #' parameters.
+#' @param shape the shape parameters of the beta prior.
 #' @param s number of successes.
 #' @param t number of failures.
-#' @param shape the shape parameters of the beta prior.
 #' @export
 vcsnb = function(shape, s, t) {
-  ds = cdsnb_stacked(min(s,t):(s+t-1), s, t, shape)
+  ds = cdsnb_stacked(min(s,t):(s+t-1), shape, s, t)
   ds[,2:3] = ds[,1]^2 * ds[,2:3]
   sum(as.vector(ds[,2:3])) - ecsnb(shape, s, t)^2 
 }

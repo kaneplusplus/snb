@@ -4,7 +4,7 @@
 \alias{kplot}
 \title{The K-Plot for the Binomial Process}
 \usage{
-kplot(flips, s, t)
+kplot(flips, s, t, bw = FALSE)
 }
 \arguments{
 \item{flips}{the sequence of coin flips (1's and 0's) to visualize.}
@@ -12,6 +12,8 @@ kplot(flips, s, t)
 \item{s}{the top barrier for the Bernoulli process.}
 
 \item{t}{the right barrier for the Bernoulli process.}
+
+\item{bw}{should the plot be in black and white?}
 }
 \description{
 Visualize the stopped Bernoulli process with a horizontal step axis and a 

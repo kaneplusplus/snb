@@ -4,16 +4,16 @@
 \alias{cdsnb_stacked}
 \title{The Conditional Stopped Negative Binomial Density}
 \usage{
-cdsnb_stacked(x, s, t, shape = c(0.5, 0.5))
+cdsnb_stacked(x, shape, s, t)
 }
 \arguments{
 \item{x}{quantile}
 
+\item{shape}{the shape parameters of the beta prior.}
+
 \item{s}{the top barrier for the snb process.}
 
 \item{t}{the right barrier for the snb process.}
-
-\item{shape}{the shape parameters of the beta prior.}
 }
 \description{
 The conditional stacked snb density function. This function gets

@@ -2,7 +2,7 @@
 % Please edit documentation in R/snb_dist.r
 \name{dsnb_stack_plot}
 \alias{dsnb_stack_plot}
-\title{The Stopped Negative Binomial p.m.f. Stack-Plot}
+\title{The Stopped Negative Binomial P.M.F. Stack-Plot}
 \usage{
 dsnb_stack_plot(p, s, t, x, offset)
 }
@@ -23,7 +23,8 @@ not start at 1.}
 a plot of the probability mass function.
 }
 \description{
-The stacked plot of the probability mass function for the snb showing
-the contributions from N (the top barrier) and R (the right barrier).
+The stacked plot of the probability mass function for the SNB showing
+the contributions from N (the top barrier) and R (the right barrier) by
+color.
 }
 
